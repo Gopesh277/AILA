@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Legal Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="docket-header">
+        <!-- faint watermark seal, purely decorative -->
+        <svg class="seal-watermark" viewBox="0 0 200 200" aria-hidden="true">
+            <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="100" cy="100" r="78" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M100 40 L110 70 L142 70 L116 88 L126 118 L100 100 L74 118 L84 88 L58 70 L90 70 Z"
+                  fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+
+        <div class="docket-top">
+            <span class="docket-mark">
+                <svg class="icon-scale" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3v18M12 3l-6 3M12 3l6 3M3 6l3 7a3 3 0 0 0 6 0L9 6M15 6l3 7a3 3 0 0 0 6 0l-3-7M6 21h12"
+                          fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                AI LEGAL ASSISTANT
+            </span>
+            <span class="docket-number" id="docket-number">No. —</span>
+        </div>
+        <h1>Read every clause, before it reads you.</h1>
+        <p class="disclaimer">AI-generated analysis is not legal advice. Always verify with a qualified attorney.</p>
+    </header>
+
+    <main>
+        <section id="upload-section">
+            <div id="drop-zone">
+                <svg class="icon-document" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 2h9l5 5v15H6V2Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M15 2v5h5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M9 12h6M9 15.5h6M9 9h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                </svg>
+                <p class="drop-label">Drop a contract here, or click to browse</p>
+                <p class="drop-sub">PDF · DOCX · TXT</p>
+                <input type="file" id="file-input" accept=".pdf,.docx,.txt" hidden>
+            </div>
+            <div id="doc-list"></div>
+        </section>
+
+        <section id="actions" class="hidden">
+            <h2 id="active-doc-name"></h2>
+            <div class="action-buttons">
+                <button class="analyze-btn" data-type="clauses">
+                    <svg class="icon-btn" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h11l5 5v11H4V4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 10h7M8 14h7M8 18h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                    Extract Clauses
+                </button>
+                <button class="analyze-btn" data-type="risk">
+                    <svg class="icon-btn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3.5v5.5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6.5L12 3Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="16" r="0.9" fill="currentColor"/></svg>
+                    Score Risk
+                </button>
+                <button class="analyze-btn" data-type="compliance">
+                    <svg class="icon-btn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3.5v5.5c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6.5L12 3Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 12l2 2 4-4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Check Compliance
+                </button>
+                <button class="analyze-btn" data-type="citations">
+                    <svg class="icon-btn" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9l5 4v12H5V4Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 9h6M9 12.5h6M9 16h3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M14 4v4h5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+                    Verify Citations
+                </button>
+                <button id="compare-btn" class="analyze-btn" disabled>
+                    <svg class="icon-btn" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h8l4 4v13H5V3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 8h6M9 3h5" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/><path d="M9 14h8l3 3v4H9v-7Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                    Compare Documents (needs 2+)
+                </button>
+            </div>
+        </section>
+
+        <section id="results"></section>
+    </main>
+
+   <script src="/js/app.js"></script>
+</body>
+</html>
