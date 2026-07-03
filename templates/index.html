@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Legal Assistant</title>
+    <title>Aila — AI Legal Assistant</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,7 +11,6 @@
 </head>
 <body>
     <header class="docket-header">
-        <!-- faint watermark seal, purely decorative -->
         <svg class="seal-watermark" viewBox="0 0 200 200" aria-hidden="true">
             <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="2"/>
             <circle cx="100" cy="100" r="78" fill="none" stroke="currentColor" stroke-width="1"/>
@@ -25,12 +24,12 @@
                     <path d="M12 3v18M12 3l-6 3M12 3l6 3M3 6l3 7a3 3 0 0 0 6 0L9 6M15 6l3 7a3 3 0 0 0 6 0l-3-7M6 21h12"
                           fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                AI LEGAL ASSISTANT
+                AILA <span class="docket-mark-sub">/ AI Legal Assistant</span>
             </span>
             <span class="docket-number" id="docket-number">No. —</span>
         </div>
-        <h1>Read every clause, before it reads you.</h1>
-        <p class="disclaimer">AI-generated analysis is not legal advice. Always verify with a qualified attorney.</p>
+        <h1>Meet Aila. She reads every clause, so you don't have to.</h1>
+        <p class="aila-subline">Upload a contract below and Aila will extract clauses, score risk, check compliance, and flag citations — walking you through what she finds.</p>
     </header>
 
     <main>
@@ -46,6 +45,7 @@
                 <input type="file" id="file-input" accept=".pdf,.docx,.txt" hidden>
             </div>
             <div id="doc-list"></div>
+            <p class="disclaimer">Aila's analysis is AI-generated and is not legal advice. Always verify with a qualified attorney.</p>
         </section>
 
         <section id="actions" class="hidden">
@@ -77,6 +77,6 @@
         <section id="results"></section>
     </main>
 
-   <script src="/js/app.js"></script>
+    <script src="/js/app.js"></script>
 </body>
 </html>

@@ -3,8 +3,10 @@ const state = {
     docs: [],       // [{name, text}]
     activeIndex: null
 };
+
 document.getElementById('docket-number').textContent =
     `No. ${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
 // ---------- DOM refs ----------
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -30,11 +32,11 @@ dropZone.addEventListener('drop', (e) => {
 
 fileInput.addEventListener('change', () => {
     if (fileInput.files.length) uploadFile(fileInput.files[0]);
-    fileInput.value = ''; // allow re-uploading the same file later
+    fileInput.value = '';
 });
 
 async function uploadFile(file) {
-    dropZone.querySelector('p').textContent = `Uploading ${file.name}...`;
+    dropZone.querySelector('.drop-label').textContent = `Uploading ${file.name}...`;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -61,7 +63,7 @@ async function uploadFile(file) {
 }
 
 function resetDropZone() {
-    dropZone.querySelector('p').textContent = 'Drag & drop a contract here, or click to browse';
+    dropZone.querySelector('.drop-label').textContent = 'Drop a contract here, or click to browse';
 }
 
 // ---------- Document list / selection ----------
@@ -85,7 +87,6 @@ function selectDoc(index) {
     renderDocList();
     actionsSection.classList.remove('hidden');
     activeDocName.textContent = `Active document: ${state.docs[index].name}`;
-    resultsSection.innerHTML = '';
 }
 
 // ---------- Analysis buttons ----------
@@ -101,11 +102,25 @@ const ENDPOINTS = {
     citations: '/api/analyze/citations'
 };
 
+const AVATAR_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true">
+    <circle cx="20" cy="20" r="19" fill="#16233B" stroke="#A9823C" stroke-width="1"/>
+    <text x="20" y="27" text-anchor="middle" font-family="Fraunces, serif" font-size="17" font-weight="600" fill="#A9823C">A</text>
+</svg>`;
+
+const AILA_INTROS = {
+    clauses: "I pulled out the key clauses from this contract.",
+    risk: "Here's how risky I think this contract is.",
+    compliance: "I checked this against standard compliance practices.",
+    citations: "I checked the legal references mentioned in this document.",
+    compare: "I compared these documents and here's what I found."
+};
+
 async function runAnalysis(type, btn) {
     if (state.activeIndex === null) return;
     const text = state.docs[state.activeIndex].text;
 
     setLoading(btn, true);
+    showTyping(type);
     try {
         const res = await fetch(ENDPOINTS[type], {
             method: 'POST',
@@ -123,6 +138,7 @@ async function runAnalysis(type, btn) {
 
 async function runCompare(btn) {
     setLoading(btn, true);
+    showTyping('compare');
     try {
         const res = await fetch('/api/analyze/compare', {
             method: 'POST',
@@ -145,15 +161,58 @@ function setLoading(btn, isLoading) {
     else if (btn.dataset.originalText) btn.textContent = btn.dataset.originalText;
 }
 
-// ---------- Rendering ----------
+// ---------- Aila message rendering ----------
+function showTyping(type) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'aila-message aila-typing';
+    wrapper.dataset.typingFor = type;
+    wrapper.innerHTML = `
+        <div class="aila-avatar">${AVATAR_SVG}</div>
+        <div class="aila-bubble">
+            <div class="aila-name">AILA</div>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+    `;
+    resultsSection.prepend(wrapper);
+}
+
+function removeTyping(type) {
+    const el = resultsSection.querySelector(`.aila-typing[data-typing-for="${type}"]`);
+    if (el) el.remove();
+}
+
+function wrapAsAilaMessage(type, innerEl, introOverride) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'aila-message';
+    wrapper.innerHTML = `
+        <div class="aila-avatar">${AVATAR_SVG}</div>
+        <div class="aila-bubble">
+            <div class="aila-name">AILA</div>
+            <p class="aila-intro">${escapeHtml(introOverride || AILA_INTROS[type] || '')}</p>
+        </div>
+    `;
+    wrapper.querySelector('.aila-bubble').appendChild(innerEl);
+    resultsSection.prepend(wrapper);
+}
+
 function renderError(type, message) {
+    removeTyping(type);
     const card = document.createElement('div');
     card.className = 'result-card error-card';
-    card.textContent = `${type} analysis failed: ${message}`;
-    resultsSection.prepend(card);
+    card.innerHTML = `
+        <p>${escapeHtml(message)}</p>
+        <button class="retry-btn" data-type="${escapeHtml(type)}">Try Again</button>
+    `;
+    card.querySelector('.retry-btn').addEventListener('click', () => {
+        card.closest('.aila-message').remove();
+        if (type === 'compare') runCompare(compareBtn);
+        else runAnalysis(type, document.querySelector(`.analyze-btn[data-type="${type}"]`));
+    });
+    wrapAsAilaMessage(type, card, "I ran into a problem completing this analysis:");
 }
 
 function renderResult(type, data) {
+    removeTyping(type);
     if (data.error) return renderError(type, data.error);
 
     const card = document.createElement('div');
@@ -165,9 +224,10 @@ function renderResult(type, data) {
     else if (type === 'citations') card.innerHTML = renderCitations(data);
     else if (type === 'compare') card.innerHTML = renderCompare(data);
 
-    resultsSection.prepend(card);
+    wrapAsAilaMessage(type, card);
 }
 
+// ---------- Result-type renderers ----------
 function renderClauses(data) {
     const items = (data.clauses || []).map(c => `
         <div class="clause-item">
@@ -181,16 +241,21 @@ function renderClauses(data) {
 
 function renderRisk(data) {
     const items = (data.risks || []).map(r => `
-        <div class="risk-item">
+        <div class="risk-item" data-sev="${escapeHtml(r.severity)}">
             <span class="risk-badge risk-${r.severity}">${escapeHtml(r.severity)}</span>
             <div class="item-title">${escapeHtml(r.category)}</div>
             <div class="item-detail">${escapeHtml(r.description)}</div>
             <div class="item-detail"><strong>Recommendation:</strong> ${escapeHtml(r.recommendation)}</div>
         </div>
     `).join('');
+    const score = data.overall_risk_score ?? '?';
+    const tier = score <= 33 ? 'low' : score <= 66 ? 'medium' : 'high';
     return `
         <h3>Risk Assessment</h3>
-        <div class="score-display">${data.overall_risk_score ?? '?'}/100</div>
+        <div class="stamp stamp-${tier}">
+            <span class="stamp-score">${score}</span>
+            <span class="stamp-label">/ 100 risk</span>
+        </div>
         <p class="item-detail">${escapeHtml(data.overall_summary || '')}</p>
         ${items}
     `;
@@ -217,6 +282,7 @@ function renderCompliance(data) {
         ${missing ? `<p class="item-title" style="margin-top:12px;">Missing Clauses</p><ul>${missing}</ul>` : ''}
     `;
 }
+
 function renderCitations(data) {
     const items = (data.citations || []).map(c => `
         <div class="citation-item">
