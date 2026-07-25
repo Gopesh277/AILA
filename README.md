@@ -107,4 +107,4 @@ AILA is intended for informational and educational purposes only. It does not co
 
 ## License
 
-No license has been specified for this repository. Please contact the repository owner for usage terms.
+All rights reserved by mg277
