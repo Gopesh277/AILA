@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AILA — pitch</title>
+<style>
+  :root{
+    --ink:#0E1420;
+    --ink2:#161E30;
+    --paper:#EFE6D2;
+    --paper-line:#D9CBA8;
+    --text:#1B2436;
+    --dim:rgba(27,36,54,0.55);
+    --gold:#B98A3D;
+    --red:#B23B3B;
+    --green:#3F7D52;
+    --amber:#C08A2E;
+    --border:rgba(185,138,61,0.28);
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    --serif: Georgia, "Times New Roman", "Noto Serif", serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at 50% 0%, #182036 0%, var(--ink) 65%);
+    color:var(--paper);
+    font-family:var(--sans);
+    display:flex; align-items:center; justify-content:center;
+    overflow-x:hidden;
+  }
+  .stage{
+    width:100%; min-height:100dvh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding: clamp(14px,4vw,36px);
+  }
+  .kicker{ color:rgba(239,230,210,0.55); font-size:clamp(11px,1.6vw,13px); }
+  .kicker a{ color:var(--gold); text-decoration:none; border-bottom:1px solid var(--border); }
+  .kicker a:hover{ border-bottom-color:var(--gold); }
+
+  .window{
+    width:min(94vw, 820px);
+    background:var(--ink2);
+    border:1px solid rgba(185,138,61,0.18);
+    border-radius:10px;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,0.7);
+    overflow:hidden;
+  }
+  .titlebar{
+    background:#101728; padding:9px 14px;
+    display:flex; align-items:center; gap:8px;
+    border-bottom:1px solid rgba(185,138,61,0.18);
+  }
+  .dot{ width:9px;height:9px;border-radius:50%; }
+  .dot.r{background:#C1554F;} .dot.y{background:#D8A94D;} .dot.g{background:#5C9A6A;}
+  .urlbar{
+    margin-left:10px; background:#0C1220; border-radius:5px; padding:3px 12px;
+    font-size:11px; color:rgba(239,230,210,0.5); font-family:var(--sans);
+  }
+
+  .screen{
+    position:relative; height:min(64vh,460px);
+    padding: clamp(16px,3vw,26px);
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .scene{ display:none; flex-direction:column; gap:12px; height:100%; }
+  .scene.active{ display:flex; }
+
+  .cap{
+    font-size:clamp(13px,2.4vw,16px);
+    color:#F2E9D6; font-weight:600;
+    white-space:nowrap; overflow:hidden; width:0;
+    animation: type linear forwards;
+    flex:none;
+  }
+  .cap .sub{ font-weight:400; color:rgba(239,230,210,0.6); }
+  @keyframes type{ from{width:0;} to{width:var(--w);} }
+
+  .body{ flex:1; display:flex; gap:14px; min-height:0; align-items:stretch; }
+
+  .paper{
+    background:var(--paper); color:var(--text);
+    border-radius:4px; padding:16px 20px;
+    font-family:var(--serif);
+    box-shadow: 0 12px 30px -14px rgba(0,0,0,0.5);
+    position:relative; overflow:hidden;
+    flex:1.5; min-width:0;
+    transition:opacity 0.4s ease;
+  }
+  .paper .doctitle{
+    font-size:clamp(11px,1.8vw,13px); letter-spacing:0.03em; color:var(--gold);
+    border-bottom:1px solid var(--paper-line); padding-bottom:6px; margin-bottom:8px;
+    display:flex; justify-content:space-between; font-family:var(--sans); font-weight:600;
+  }
+  .sec{ margin-bottom:8px; }
+  .sec .stitle{
+    font-size:clamp(11.5px,2vw,13px); font-weight:700; display:flex; align-items:center;
+    justify-content:space-between; gap:8px;
+  }
+  .line{ height:6px; background:var(--paper-line); border-radius:3px; margin:5px 0; opacity:0.85; }
+  .tag{
+    font-family:var(--sans); font-size:10.5px; font-weight:600; color:#fff;
+    background:var(--gold); padding:2px 8px; border-radius:3px;
+    opacity:0; transform:scale(0.85);
+    animation: pop 0.35s ease forwards;
+  }
+  .tag.red{ background:var(--red); }
+  @keyframes pop{ to{ opacity:1; transform:scale(1); } }
+
+  .wash{
+    position:absolute; left:16px; right:16px; height:20px; border-radius:3px;
+    opacity:0; animation: fadeIn 0.5s ease forwards;
+  }
+  @keyframes fadeIn{ to{ opacity:0.28; } }
+
+  .stamp{
+    position:absolute; top:14px; right:16px;
+    border:2px solid var(--red); color:var(--red);
+    font-family:var(--sans); font-weight:800; font-size:11px; letter-spacing:0.04em;
+    padding:5px 10px; border-radius:4px; transform:rotate(6deg) scale(0.7);
+    opacity:0; animation: stampIn 0.4s ease forwards; animation-delay:1.6s;
+  }
+  @keyframes stampIn{ to{ opacity:1; transform:rotate(6deg) scale(1); } }
+
+  .icon{ font-family:var(--sans); font-size:12px; font-weight:800; opacity:0; animation:fadeUp 0.35s ease forwards; }
+  .icon.ok{ color:var(--green); } .icon.no{ color:var(--red); }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .side{
+    flex:1; min-width:150px; display:flex; flex-direction:column; gap:8px; justify-content:center;
+  }
+  .check{
+    display:flex; align-items:center; gap:8px; font-size:clamp(11px,2vw,13px);
+    background:rgba(239,230,210,0.06); border:1px solid rgba(185,138,61,0.2);
+    border-radius:6px; padding:8px 10px;
+    opacity:0; transform:translateX(8px);
+    animation: slideIn 0.4s ease forwards;
+  }
+  @keyframes slideIn{ to{ opacity:1; transform:translateX(0); } }
+
+  .diffcols{ display:flex; gap:12px; flex:1.5; }
+  .minipaper{
+    flex:1; background:var(--paper); color:var(--text); border-radius:4px; padding:12px 14px;
+    font-family:var(--serif); font-size:11px;
+  }
+  .minipaper .mtitle{ font-family:var(--sans); font-weight:700; color:var(--gold); font-size:11px; margin-bottom:6px; }
+  .difrow{ display:flex; align-items:center; gap:6px; margin:5px 0; opacity:0; animation:fadeUp 0.35s ease forwards; }
+  .difrow .mk{ font-family:var(--sans); font-weight:800; width:10px; flex:none; }
+  .difrow.rm .mk{ color:var(--red); } .difrow.rm .line{ background:#D9A6A6; }
+  .difrow.add .mk{ color:var(--green); } .difrow.add .line{ background:#A9CBAE; }
+
+  .flow{ flex:1; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .fbox{
+    background:rgba(239,230,210,0.06); border:1px solid rgba(185,138,61,0.28);
+    border-radius:8px; padding:14px 12px; text-align:center; font-size:clamp(11px,2vw,12.5px);
+    color:#F2E9D6; min-width:110px; opacity:0; transform:translateY(8px);
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .arrow{ color:var(--gold); font-size:18px; opacity:0; animation: fadeUp 0.3s ease forwards; }
+
+  .closer{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; }
+  .closer .big{ font-family:var(--serif); font-size:clamp(18px,4vw,26px); color:#F5EEDC; opacity:0; animation:fadeUp 0.6s ease forwards; }
+  .closer .link{ font-size:13px; color:var(--gold); opacity:0; animation:fadeUp 0.5s ease forwards; }
+  .closer .ghost-paper{ position:absolute; inset:0; opacity:0.12; }
+
+  .controls{ display:flex; align-items:center; gap:12px; width:min(94vw,820px); }
+  .ctrlbtn{
+    background:transparent; border:1px solid var(--border); color:var(--gold);
+    width:34px;height:34px;border-radius:7px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;
+  }
+  .ctrlbtn:hover{ border-color:var(--gold); }
+  .segments{ flex:1; display:flex; gap:5px; }
+  .seg{ flex:1; height:4px; background:rgba(185,138,61,0.18); border-radius:2px; overflow:hidden; cursor:pointer; }
+  .seg .fill{ height:100%; width:0%; background:var(--gold); }
+  .seg .fill.done{ width:100%; }
+  .seg .fill.run{ animation: fillbar linear forwards; }
+  @keyframes fillbar{ from{width:0%;} to{width:100%;} }
+  .counter{ color:rgba(239,230,210,0.5); font-size:12px; flex:none; min-width:42px; text-align:right; }
+
+  .app.paused .cap, .app.paused .tag, .app.paused .wash, .app.paused .stamp,
+  .app.paused .icon, .app.paused .check, .app.paused .difrow, .app.paused .fbox,
+  .app.paused .arrow, .app.paused .closer .big, .app.paused .closer .link, .app.paused .fill.run{
+    animation-play-state:paused !important;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cap{ width:var(--w) !important; animation:none !important; }
+    .tag,.wash,.stamp,.icon,.check,.difrow,.fbox,.arrow,.closer .big,.closer .link{
+      opacity:1 !important; transform:none !important; animation:none !important;
+    }
+    .fill.run{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="stage app" id="app">
+  <div class="kicker">a pitch for <a href="https://github.com/Gopesh277/AILA" target="_blank" rel="noopener">github.com/Gopesh277/AILA</a></div>
+  <div class="window">
+    <div class="titlebar">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="urlbar" id="urlbar">aila.app / analyze</span>
+    </div>
+    <div class="screen" id="screen"></div>
+  </div>
+  <div class="controls">
+    <button class="ctrlbtn" id="prevBtn" title="Previous">◂</button>
+    <button class="ctrlbtn" id="playBtn" title="Play/Pause">❚❚</button>
+    <div class="segments" id="segments"></div>
+    <button class="ctrlbtn" id="nextBtn" title="Next">▸</button>
+    <span class="counter" id="counter">1/9</span>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  {key:'term', title:'1. Term & Termination'},
+  {key:'payment', title:'2. Payment Terms'},
+  {key:'liability', title:'3. Liability'},
+  {key:'data', title:'4. Data Protection'},
+  {key:'law', title:'5. Governing Law'},
+];
+
+function buildPaper(fileLabel){
+  const paper = document.createElement('div');
+  paper.className = 'paper';
+  const head = document.createElement('div');
+  head.className = 'doctitle';
+  head.innerHTML = '<span>MERCHANT SERVICES AGREEMENT</span><span>'+(fileLabel||'contract_v3.pdf')+'</span>';
+  paper.appendChild(head);
+  const secEls = {};
+  SECTIONS.forEach(s=>{
+    const sec = document.createElement('div');
+    sec.className = 'sec';
+    const t = document.createElement('div');
+    t.className = 'stitle';
+    t.innerHTML = '<span>'+s.title+'</span><span class="tagslot"></span>';
+    sec.appendChild(t);
+    const l1 = document.createElement('div'); l1.className='line'; l1.style.width='90%';
+    const l2 = document.createElement('div'); l2.className='line'; l2.style.width='62%';
+    sec.appendChild(l1); sec.appendChild(l2);
+    paper.appendChild(sec);
+    secEls[s.key] = {sec, title:t, l1, l2};
+  });
+  return {paper, secEls};
+}
+function addTag(secEl, text, delay, red){
+  const slot = secEl.title.querySelector('.tagslot');
+  const tag = document.createElement('span');
+  tag.className = 'tag' + (red?' red':'');
+  tag.textContent = text;
+  tag.style.animationDelay = delay+'ms';
+  slot.appendChild(tag);
+}
+function addWash(paper, secEl, delay, color){
+  const wash = document.createElement('div');
+  wash.className = 'wash';
+  wash.style.background = color;
+  wash.style.animationDelay = delay+'ms';
+  const top = secEl.sec.offsetTop; // fallback set after mount
+  paper.appendChild(wash);
+  requestAnimationFrame(()=>{
+    wash.style.top = secEl.sec.offsetTop + 'px';
+    wash.style.height = secEl.sec.offsetHeight + 'px';
+  });
+}
+function addIcon(secEl, ok, delay){
+  const slot = secEl.title.querySelector('.tagslot');
+  const icon = document.createElement('span');
+  icon.className = 'icon ' + (ok?'ok':'no');
+  icon.textContent = ok ? '✓ verified' : '✕ unverifiable';
+  icon.style.animationDelay = delay+'ms';
+  slot.appendChild(icon);
+}
+function addCap(scene, text, delay){
+  const el = document.createElement('div');
+  el.className = 'cap';
+  el.textContent = text;
+  const chars = text.length;
+  const dur = Math.max(400, chars*26);
+  el.style.setProperty('--w', chars+'ch');
+  el.style.animationDuration = dur+'ms';
+  el.style.animationDelay = (delay||0)+'ms';
+  scene.appendChild(el);
+}
+
+const scenes = [
+  { name:'hook', duration:35000, url:'aila.app', build:(root)=>{
+      addCap(root, 'A 40-page merchant agreement. One reviewer. A deadline.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper} = buildPaper('contract_v3.pdf');
+      paper.style.opacity = '0.35';
+      body.appendChild(paper);
+      root.appendChild(body);
+  }},
+  { name:'solution', duration:32000, url:'aila.app / upload', build:(root)=>{
+      addCap(root, 'Upload it. AILA reads it in seconds — and marks it up.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper} = buildPaper('contract_v3.pdf');
+      body.appendChild(paper);
+      root.appendChild(body);
+  }},
+  { name:'clauses', duration:38000, url:'aila.app / analyze/clauses', build:(root)=>{
+      addCap(root, 'Extracts the clauses that actually matter.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper, secEls} = buildPaper('contract_v3.pdf');
+      body.appendChild(paper); root.appendChild(body);
+      addTag(secEls.term, 'Termination', 1600);
+      addTag(secEls.payment, 'Payment', 2400);
+      addTag(secEls.liability, 'Liability', 3200);
+  }},
+  { name:'risk', duration:38000, url:'aila.app / analyze/risk', build:(root)=>{
+      addCap(root, 'Scores risk, and shows exactly where it lives.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper, secEls} = buildPaper('contract_v3.pdf');
+      body.appendChild(paper); root.appendChild(body);
+      addWash(paper, secEls.liability, 1500, 'rgba(178,59,59,0.6)');
+      addWash(paper, secEls.data, 2100, 'rgba(192,138,46,0.6)');
+      const stamp = document.createElement('div');
+      stamp.className='stamp'; stamp.textContent='RISK: HIGH';
+      paper.appendChild(stamp);
+  }},
+  { name:'compliance', duration:34000, url:'aila.app / analyze/compliance', build:(root)=>{
+      addCap(root, 'Checks it against the framework you choose.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper} = buildPaper('contract_v3.pdf');
+      body.appendChild(paper);
+      const side = document.createElement('div'); side.className='side';
+      const items = [['GDPR — pass','#3F7D52'],['PCI-DSS — flagged','#B23B3B'],['Local KYC — pass','#3F7D52']];
+      items.forEach((it,i)=>{
+        const c = document.createElement('div'); c.className='check';
+        c.style.animationDelay=(700+i*550)+'ms';
+        c.innerHTML = '<span style="color:'+it[1]+'">●</span> '+it[0];
+        side.appendChild(c);
+      });
+      body.appendChild(side); root.appendChild(body);
+  }},
+  { name:'citations', duration:30000, url:'aila.app / analyze/citations', build:(root)=>{
+      addCap(root, 'Verifies every citation it can find.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const {paper, secEls} = buildPaper('contract_v3.pdf');
+      body.appendChild(paper); root.appendChild(body);
+      addIcon(secEls.payment, true, 1400);
+      addIcon(secEls.data, true, 2000);
+      addIcon(secEls.law, false, 2600);
+  }},
+  { name:'compare', duration:36000, url:'aila.app / analyze/compare', build:(root)=>{
+      addCap(root, 'Compares versions and shows exactly what changed.', 0);
+      const body = document.createElement('div'); body.className='diffcols';
+      const v1 = document.createElement('div'); v1.className='minipaper';
+      v1.innerHTML = '<div class="mtitle">v1 — original</div>';
+      const v2 = document.createElement('div'); v2.className='minipaper';
+      v2.innerHTML = '<div class="mtitle">v2 — redline</div>';
+      [ ['term',false], ['payment',true], ['liability',false] ].forEach((s,i)=>{
+        const r1 = document.createElement('div'); r1.className='difrow rm';
+        r1.style.animationDelay=(600+i*500)+'ms';
+        r1.innerHTML = '<span class="mk">−</span><span class="line" style="width:'+(70+i*8)+'%"></span>';
+        v1.appendChild(r1);
+      });
+      [ ['term',false], ['payment',true], ['liability',false] ].forEach((s,i)=>{
+        const r2 = document.createElement('div'); r2.className='difrow add';
+        r2.style.animationDelay=(900+i*500)+'ms';
+        r2.innerHTML = '<span class="mk">+</span><span class="line" style="width:'+(60+i*10)+'%"></span>';
+        v2.appendChild(r2);
+      });
+      body.appendChild(v1); body.appendChild(v2); root.appendChild(body);
+  }},
+  { name:'arch', duration:30000, url:'aila.app / docs', build:(root)=>{
+      addCap(root, 'Flask, migrated to FastAPI — async, with docs built in.', 0);
+      const body = document.createElement('div'); body.className='body';
+      const flow = document.createElement('div'); flow.className='flow';
+      const boxes = ['Browser · upload UI','FastAPI · REST + /docs','Gemini · reasoning','JSON response → UI'];
+      boxes.forEach((b,i)=>{
+        if(i>0){ const a=document.createElement('div'); a.className='arrow'; a.textContent='→';
+          a.style.animationDelay=(i*700-200)+'ms'; flow.appendChild(a); }
+        const box=document.createElement('div'); box.className='fbox'; box.textContent=b;
+        box.style.animationDelay=(i*700)+'ms';
+        flow.appendChild(box);
+      });
+      body.appendChild(flow); root.appendChild(body);
+  }},
+  { name:'cta', duration:27000, url:'aila.app', build:(root)=>{
+      const body = document.createElement('div'); body.className='body closer';
+      const big = document.createElement('div'); big.className='big';
+      big.textContent = 'Point it at a document. Walk away with a verdict.';
+      const link = document.createElement('div'); link.className='link';
+      link.style.animationDelay = '1200ms';
+      link.textContent = 'github.com/Gopesh277/AILA';
+      body.appendChild(big); body.appendChild(link);
+      root.appendChild(body);
+  }},
+];
+
+const screenEl = document.getElementById('screen');
+const segmentsEl = document.getElementById('segments');
+const counterEl = document.getElementById('counter');
+const urlbarEl = document.getElementById('urlbar');
+const app = document.getElementById('app');
+
+scenes.forEach((sc,i)=>{
+  const el = document.createElement('div');
+  el.className = 'scene';
+  sc.build(el);
+  screenEl.appendChild(el);
+  sc.el = el;
+
+  const seg = document.createElement('div'); seg.className='seg'; seg.dataset.i=i;
+  const fill = document.createElement('div'); fill.className='fill';
+  seg.appendChild(fill);
+  seg.addEventListener('click', ()=> goTo(i));
+  segmentsEl.appendChild(seg);
+});
+
+let current = 0, playing = true;
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function render(i){
+  scenes.forEach((sc,j)=> sc.el.classList.toggle('active', j===i));
+  urlbarEl.textContent = scenes[i].url;
+  document.querySelectorAll('.seg .fill').forEach((f,j)=>{
+    f.classList.remove('run','done');
+    if(j<i) f.classList.add('done');
+    if(j===i && !reduced){
+      f.style.animationDuration = scenes[i].duration+'ms';
+      void f.offsetWidth;
+      f.classList.add('run');
+    }
+  });
+  counterEl.textContent = (i+1)+'/'+scenes.length;
+}
+function goTo(i){
+  current = ((i % scenes.length)+scenes.length) % scenes.length;
+  render(current);
+  clearTimeout(window.__advanceTimer);
+  if(playing){
+    window.__advanceTimer = setTimeout(()=> goTo(current+1), scenes[current].duration);
+  }
+}
+document.getElementById('playBtn').addEventListener('click', ()=>{
+  playing = !playing;
+  document.getElementById('playBtn').textContent = playing ? '❚❚' : '▶';
+  app.classList.toggle('paused', !playing);
+  if(playing){
+    const fill = document.querySelectorAll('.seg .fill')[current];
+    let remaining = scenes[current].duration;
+    if(!reduced){
+      const w = parseFloat(getComputedStyle(fill).width);
+      const total = fill.parentElement.offsetWidth;
+      const pct = total ? w/total : 0;
+      remaining = Math.max(300, scenes[current].duration*(1-pct));
+    }
+    clearTimeout(window.__advanceTimer);
+    window.__advanceTimer = setTimeout(()=> goTo(current+1), remaining);
+  } else {
+    clearTimeout(window.__advanceTimer);
+  }
+});
+document.getElementById('nextBtn').addEventListener('click', ()=> goTo(current+1));
+document.getElementById('prevBtn').addEventListener('click', ()=> goTo(current-1));
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight') goTo(current+1);
+  if(e.key==='ArrowLeft') goTo(current-1);
+  if(e.key===' '){ e.preventDefault(); document.getElementById('playBtn').click(); }
+});
+
+goTo(0);
+if(reduced){
+  clearTimeout(window.__advanceTimer);
+  document.getElementById('playBtn').style.display='none';
+}
+</script>
+</body>
+</html>
